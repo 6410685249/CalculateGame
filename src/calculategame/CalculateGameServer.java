@@ -14,14 +14,12 @@ public class CalculateGameServer {
     private static BlockingQueue<String> questionQueue = new LinkedBlockingQueue<>();
     private static volatile String currentQuestion;
     private static final int TOTAL_QUESTION = 100;
-    private static final int WINNING_SCORE = 2;
+    private static final int WINNING_SCORE = 10;
     private static int questionCount = 0;
     private static int counter = 0;
-    // private static int wrongAnswersCount = 0;
 
     public static void main(String[] args) {
         System.out.println("Calculate Game Server is running...");
-        // resetServer();
         try {
             serverSocket = new ServerSocket(SERVER_PORT);
             resetServer();
@@ -78,7 +76,6 @@ public class CalculateGameServer {
             player.endGame(winner);
             player.resetPlayer();
             System.out.println(player.playerName + " " + player.isReady);
-            // player.playAgain();
         }
         resetServer();
     }
@@ -133,7 +130,6 @@ public class CalculateGameServer {
     private static class PlayerConnectionManager implements Runnable {
         @Override
         public void run() {
-            // try (ServerSocket serverSocket = new ServerSocket(SERVER_PORT)) {
             try {
                 while (true) {
                     Socket playerSocket = serverSocket.accept();
@@ -199,13 +195,11 @@ public class CalculateGameServer {
                             if (checkAnswer(num1, num2, operator, playerAnswer)){
                                 score++;
                                 System.out.println(playerName + "god");
-                                // isAnswerCorrect = true;
                                 isAnswer = true;
                                 anyAnswerCorrect = true;
                             }
                             else {
                                 System.out.println(playerName + "noob");
-                                // isAnswerWrong = true;
                                 isAnswer = true;
                             }
 
@@ -303,7 +297,6 @@ public class CalculateGameServer {
             out.println("Game Over! The winner is '" + winner + "'");
             counter = 0;
             currentCount = 0;
-            // out.println("Thank you for playing!");
         }
 
         private void resetPlayer() {
