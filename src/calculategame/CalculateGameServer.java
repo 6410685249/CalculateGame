@@ -32,7 +32,7 @@ public class CalculateGameServer {
 
     // Reset server when player close connection or endgame.
     private static void resetServer(){
-        // players.clear();
+        players.clear();
         questionQueue.clear();
         questionCount = 0;
         counter = 0;
@@ -82,13 +82,6 @@ public class CalculateGameServer {
         }
         resetServer();
     }
-
-    // private static synchronized void removePlayer(PlayerHandler playerHandler){
-    //     players.remove(playerHandler);
-    //     if (players.isEmpty()){
-    //         resetServer();
-    //     }
-    // }
 
     // Thread for generate question
     private static class QuestionGenerator implements Runnable {
@@ -193,10 +186,6 @@ public class CalculateGameServer {
                             System.out.println("start laew ja");
                         }
                     }
-                    else if (input.equalsIgnoreCase("play again")) {
-                        resetPlayer();
-                        out.println("Waiting for other players...");
-                    }
                     else if (isReady) {
                         try{
                             int playerAnswer = Integer.parseInt(input);
@@ -253,7 +242,6 @@ public class CalculateGameServer {
                catch (IOException e) {
                 e.printStackTrace();
                }
-            //    removePlayer(this);
             }
         }
 
@@ -325,129 +313,3 @@ public class CalculateGameServer {
         }
     }
 }
-
-/* Old code
-public class CalculateGameServer {
-    private static final int SERVERPORT = 12345;
-    private static Set<PlayerHandler> players = ConcurrentHashMap.newKeySet();
-    private static Set<PlayerHandler> readyPlayers = ConcurrentHashMap.newKeySet();
-    private static final int TOTAL_QUESTION = 10;
-
-    public static void main(String[] args) {
-        // Socket socket = new Socket();
-        System.out.println("Server is running...");
-        try (ServerSocket serverSocket = new ServerSocket(SERVERPORT)) {
-            while (true) {
-                Socket playerSocket = serverSocket.accept();
-
-                System.out.println(playerSocket.getInetAddress().getHostAddress() + ": " + playerSocket.getPort());
-
-                PlayerHandler playerHandler = new PlayerHandler(playerSocket);
-                players.add(playerHandler);
-                new Thread(playerHandler).start();
-
-                System.out.println("what");
-            }
-        } catch (IOException err) {
-            err.printStackTrace();
-        }
-    }
-
-    private static class PlayerHandler implements Runnable {
-        private Socket socket;
-        private PrintWriter printOut;
-        private BufferedReader in;
-        private int playerNo = 1;
-        private int scores = 0;
-
-        private PlayerHandler(Socket socket){
-            this.socket = socket;
-        }
-        
-        @Override
-        public void run() {
-            try {
-                printOut = new PrintWriter(socket.getOutputStream(), true);
-                in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
-                printOut.println("Welcome ja");
-
-                broadcastMessage("Player" + playerNo++ + "has joined game!");
-                printOut.print("Type something' when you are read to play.: ");
-                String message;
-                while ((message = in.readLine()) != null) {
-                    markAsReady(this);
-                    break;
-                }
-
-                synchronized (readyPlayers) {
-                    while (readyPlayers.size() != players.size()) {
-                        readyPlayers.wait();
-                    }
-                }
-                
-
-                printOut.println();
-
-                Random rand = new Random();
-                int correctAnswer = 0;
-                for (int i = 0; i < 5; i++) {
-                    int num1 = rand.nextInt(100);
-                    int num2 = rand.nextInt(100);
-                    char[] operators = {'+', '-', 'x', '/'};
-                    char operator = operators[rand.nextInt(4)];
-
-                    switch(operator){
-                        case '+': correctAnswer = num1 + num2; break;
-                        case '-': correctAnswer = num1 - num2; break;
-                        case 'x': correctAnswer = num1 * num2; break;
-                        case '/': correctAnswer = num1 / num2; break; // make it have no remainder by 
-                    }
-                    
-                    String problem = String.format("Round %d: %d %c %d =", i+1, num1, operator,num2);
-                    broadcastMessage(problem);
-
-                    int playerAns = Integer.parseInt(in.readLine());
-                    printOut.printf("\n");
-
-                    if (playerAns == correctAnswer){
-                        printOut.println("Good!");
-                        scores++;
-                    }
-                    else {
-                        printOut.println("You get better!");
-                    }
-                }
-
-                printOut.printf("Your final Score(s) : %d.%n", scores);
-                printOut.flush();
-                socket.close();
-            }
-            catch(IOException | InterruptedException err){
-              err.printStackTrace();
-            }
-            finally {
-                players.remove(this);
-                broadcastMessage("Player " + playerNo + " has left the game.");
-            }
-        }
-
-        private void markAsReady(PlayerHandler PlayerHandler) throws InterruptedException {
-            synchronized (readyPlayers) {
-                readyPlayers.add(PlayerHandler);
-                broadcastMessage("Player " + playerNo + " is ready!");
-                if (readyPlayers.size() == players.size()) {
-                    readyPlayers.notifyAll();
-                }
-            }
-        }
-
-        private void broadcastMessage(String message) {
-            for (PlayerHandler player : players) {
-                player.printOut.println(message);
-            }
-        }
-
-    }
-}
-*/
