@@ -138,18 +138,18 @@ package calculategame;
                          submitButton.setEnabled(false);
                          // break; // Exit the loop since the game is over
  
-                         int playAgain = JOptionPane.showConfirmDialog(frame, "Would you like to play again?", "Play Again", JOptionPane.YES_NO_OPTION);
+                        //  int playAgain = JOptionPane.showConfirmDialog(frame, "Would you like to play again?", "Play Again", JOptionPane.YES_NO_OPTION);
                          // String option = JOptionPane.showInputDialog(frame, "\nWould you like to play again? (yes/no)");
-                         if (playAgain == JOptionPane.YES_OPTION) {
-                             questionLabel.setText("Waiting for question...");
-                             out.println("play again");
-                             readyButton.setEnabled(true);
-                         } else {
+                        //  if (playAgain == JOptionPane.YES_OPTION) {
+                        //      questionLabel.setText("Waiting for question...");
+                        //      out.println("play again");
+                        //      readyButton.setEnabled(true);
+                        //  } else {
                              // out.println("Thank you for playing!");
                              JOptionPane.showMessageDialog(frame, "Thank you for playing!", "End Game", JOptionPane.INFORMATION_MESSAGE);
                              frame.dispose();
                              break; // Exit the loop and close the client
-                         }
+                        //  }
                      }
                      else {
                          JOptionPane.showMessageDialog(frame, response);

@@ -83,6 +83,13 @@ public class CalculateGameServer {
         resetServer();
     }
 
+    private static synchronized void removePlayer(PlayerHandler playerHandler){
+        players.remove(playerHandler);
+        if (players.isEmpty()){
+            resetServer();
+        }
+    }
+
     // Thread for generate question
     private static class QuestionGenerator implements Runnable {
         private final char[] operators = {'+', '-', 'x', '/'};
@@ -186,6 +193,14 @@ public class CalculateGameServer {
                             System.out.println("start laew ja");
                         }
                     }
+                    else if (input.equalsIgnoreCase("play again")) {
+                        resetPlayer();
+                        out.println("Waiting for other players...");
+                    }
+                    else if (input.equalsIgnoreCase("goodbye")) {
+                        System.out.println(playerName+" BYE");
+                        removePlayer(this);
+                    }
                     else if (isReady) {
                         try{
                             int playerAnswer = Integer.parseInt(input);
@@ -242,6 +257,7 @@ public class CalculateGameServer {
                catch (IOException e) {
                 e.printStackTrace();
                }
+            //    removePlayer(this);
             }
         }
 
