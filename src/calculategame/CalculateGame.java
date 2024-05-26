@@ -183,6 +183,7 @@ package calculategame;
              JOptionPane.INFORMATION_MESSAGE
          );
          String serverAddress = JOptionPane.showInputDialog("Enter server IP address:");
+        // String serverAddress = "localhost";
          try {
              new CalculateGame(serverAddress);
          } catch (IOException e) {

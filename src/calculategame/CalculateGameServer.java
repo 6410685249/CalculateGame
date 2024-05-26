@@ -9,23 +9,30 @@ import java.util.concurrent.*;
 
 public class CalculateGameServer {
     private static final int SERVER_PORT = 8888;
+    private static ServerSocket serverSocket;
     private static List<PlayerHandler> players = new ArrayList<>();
     private static BlockingQueue<String> questionQueue = new LinkedBlockingQueue<>();
     private static volatile String currentQuestion;
     private static final int TOTAL_QUESTION = 100;
-    private static final int WINNING_SCORE = 10;
+    private static final int WINNING_SCORE = 2;
     private static int questionCount = 0;
     private static int counter = 0;
     // private static int wrongAnswersCount = 0;
 
     public static void main(String[] args) {
         System.out.println("Calculate Game Server is running...");
-        resetServer();
+        // resetServer();
+        try {
+            serverSocket = new ServerSocket(SERVER_PORT);
+            resetServer();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     // Reset server when player close connection or endgame.
     private static void resetServer(){
-        players.clear();
+        // players.clear();
         questionQueue.clear();
         questionCount = 0;
         counter = 0;
@@ -36,8 +43,10 @@ public class CalculateGameServer {
     /* Method synchronized */
     private static synchronized void broadcastQuestion(String question) {
         System.out.println("start broadcast");
+        System.out.println(players.toString());
         for (PlayerHandler player : players) {
             player.sendQuestion(question);
+            System.out.println(player.playerName + "kuy");
         }
         System.out.println("finish boardcast");
     }
@@ -68,7 +77,7 @@ public class CalculateGameServer {
         for (PlayerHandler player : players) {
             player.endGame(winner);
             player.resetPlayer();
-            System.out.print(player.playerName + " " + player.isReady);
+            System.out.println(player.playerName + " " + player.isReady);
             // player.playAgain();
         }
         resetServer();
@@ -81,56 +90,6 @@ public class CalculateGameServer {
     //     }
     // }
 
-    /*  Handle question: next question will show when any player input correct answer or all player input wrong answer. */
-    /*
-    private static synchronized void handleAnswer(PlayerHandler player, int answer) {
-        String[] questionParts = currentQuestion.split(" ");
-        int num1 = Integer.parseInt(questionParts[1]);
-        String operator = questionParts[2];
-        int num2 = Integer.parseInt(questionParts[3]);
-        // int correctAnswer = operator.equals("+") ? num1 + num2 : num1 - num2;
-
-        if (player.checkAnswer(num1, num2, operator, answer)) {
-            player.increaseScore();
-            wrongAnswersCount = 0;
-            updateScores();
-            checkForWinner(player);
-
-            try {
-                currentQuestion = questionQueue.take();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            broadcastQuestion(currentQuestion);
-        }
-        else {
-            wrongAnswersCount++;
-            if (wrongAnswersCount >= players.size()) {
-                wrongAnswersCount = 0;
-                try {
-                    currentQuestion = questionQueue.take();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                broadcastQuestion(currentQuestion);
-            }
-        }
-    }
-    */
-
-    // private static synchronized String determineWinner() {
-    //     if (players.isEmpty()) {
-    //         return "No players.";
-    //     }
-    //     PlayerHandler winner = players.get(0);
-    //     for (PlayerHandler player : players) {
-    //         if (player.getScore() > winner.getScore()) {
-    //             winner = player;
-    //         }
-    //     }
-    //     return winner.getPlayerName() + " is the winner with " + winner.getScore() + " points!";
-    // }
-
     // Thread for generate question
     private static class QuestionGenerator implements Runnable {
         private final char[] operators = {'+', '-', 'x', '/'};
@@ -141,9 +100,7 @@ public class CalculateGameServer {
                 try {
                     String question = generateNewQuestion();
                     questionQueue.put(question);
-                    // System.out.println("Question counter: " + questionCount);
                     questionCount++;
-                    // Thread.sleep(30000); // Wait 30 seconds before generating the next question
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -183,7 +140,8 @@ public class CalculateGameServer {
     private static class PlayerConnectionManager implements Runnable {
         @Override
         public void run() {
-            try (ServerSocket serverSocket = new ServerSocket(SERVER_PORT)) {
+            // try (ServerSocket serverSocket = new ServerSocket(SERVER_PORT)) {
+            try {
                 while (true) {
                     Socket playerSocket = serverSocket.accept();
                     PlayerHandler playerHandler = new PlayerHandler(playerSocket);
@@ -208,12 +166,8 @@ public class CalculateGameServer {
         private BufferedReader in;
         private boolean isReady = false;
         private int score = 0;
-        // private boolean isAnswerWrong = false;
-        // private boolean isAnswerCorrect = false;
         private boolean isAnswer = false;
         private boolean anyAnswerCorrect = false;
-        // private static final Object lock = new Object(); // for critical section
-        // private int answered = 0;
 
         int currentCount = 0;
 
@@ -226,17 +180,13 @@ public class CalculateGameServer {
             try {
                 in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 out = new PrintWriter(socket.getOutputStream(), true);
-                // out.print("Enter your name:");
                 playerName = in.readLine();
-                // out.println("Welcome to the Calculate Game!");
                 out.println("Welcome to the Calculate Game " + playerName + "! Click 'ready' when you are ready to start.");
 
                 String input;
-                // while ((input = in.readLine()) != null) {
                     while ((input = in.readLine()) != null) {
                     if (input.equalsIgnoreCase("ready")) {
                         isReady = true;
-                        // out.println("You are ready. Waiting for other players...");
                         if (allPlayersReady()){
                             currentQuestion = questionQueue.take();
                             broadcastQuestion(currentQuestion);
@@ -246,17 +196,9 @@ public class CalculateGameServer {
                     else if (input.equalsIgnoreCase("play again")) {
                         resetPlayer();
                         out.println("Waiting for other players...");
-                        // if (allPlayersReady()) {
-                        //     currentQuestion = questionQueue.take();
-                        //     broadcastQuestion(currentQuestion);
-                        // }
                     }
                     else if (isReady) {
                         try{
-                            // isAnswerCorrect = false;
-                            // isAnswerWrong = false;
-                            // isAnswer = false;
-
                             int playerAnswer = Integer.parseInt(input);
                             String[] questionParts = currentQuestion.split(" ");
                             System.out.println("Question:" + Arrays.toString(questionParts));
@@ -291,9 +233,6 @@ public class CalculateGameServer {
                                     broadcastQuestion(currentQuestion);
                                 }
                             }
-
-                            // int playerAnswer = Integer.parseInt(input);
-                            // handleAnswer(this, playerAnswer);
                         }
                         catch (NumberFormatException | InterruptedException e){
                             e.printStackTrace();
@@ -309,11 +248,11 @@ public class CalculateGameServer {
             finally{
                try {
                     socket.close();
+                    System.out.println(players.toString());
                }
                catch (IOException e) {
                 e.printStackTrace();
                }
-
             //    removePlayer(this);
             }
         }
@@ -332,9 +271,6 @@ public class CalculateGameServer {
 
         private boolean allPlayersAnswered() {
             for (PlayerHandler player : players) {
-                // if (!player.isAnswerCorrect && !player.isAnswerWrong) {
-                //     return false;
-                // }
                 if (!player.isAnswer) {
                     return false;
                 }
@@ -344,8 +280,6 @@ public class CalculateGameServer {
         
         private void resetPlayerAnswers() {
             for (PlayerHandler player : players) {
-                // player.isAnswerCorrect = false;
-                // player.isAnswerWrong = false;
                 player.isAnswer = false;
             }
         }
@@ -361,7 +295,6 @@ public class CalculateGameServer {
 
         private void sendQuestion(String question) {
             currentCount = counter + 1;
-            // int currentCount = counter + 1;
             out.println("Question " + currentCount + ": " + question);
             System.out.println("counter: " + counter);
         }
@@ -369,10 +302,6 @@ public class CalculateGameServer {
         public String getPlayerName() {
             return playerName;
         }
-
-        // public void increaseScore() {
-        //     this.score++;
-        // }
 
         private void sendScoreUpdate(String scores) {
             out.println("Score Update:" + scores);
@@ -384,18 +313,13 @@ public class CalculateGameServer {
 
         private void endGame(String winner) {
             out.println("Game Over! The winner is '" + winner + "'");
-
             counter = 0;
             currentCount = 0;
             // out.println("Thank you for playing!");
         }
 
-        // private void playAgain() {
-        //     out.println("Game Over! Would you like to play again? Type 'play again' to continue or 'exit' to quit.");
-        // }
-
         private void resetPlayer() {
-            System.out.print(this.playerName + ": Reseto");
+            System.out.println(this.playerName + ": Reseto");
             score = 0;
             isReady = false;
         }
