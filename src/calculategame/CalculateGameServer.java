@@ -32,7 +32,7 @@ public class CalculateGameServer {
 
     // Reset server when player close connection or endgame.
     private static void resetServer(){
-        players.clear();
+        // players.clear();
         questionQueue.clear();
         questionCount = 0;
         counter = 0;
@@ -81,6 +81,13 @@ public class CalculateGameServer {
             // player.playAgain();
         }
         resetServer();
+    }
+
+    private static synchronized void removePlayer(PlayerHandler playerHandler){
+        players.remove(playerHandler);
+        if (players.isEmpty()){
+            resetServer();
+        }
     }
 
     // Thread for generate question
@@ -186,6 +193,14 @@ public class CalculateGameServer {
                             System.out.println("start laew ja");
                         }
                     }
+                    else if (input.equalsIgnoreCase("play again")) {
+                        resetPlayer();
+                        out.println("Waiting for other players...");
+                    }
+                    else if (input.equalsIgnoreCase("goodbye")) {
+                        System.out.println(playerName+" BYE");
+                        removePlayer(this);
+                    }
                     else if (isReady) {
                         try{
                             int playerAnswer = Integer.parseInt(input);
@@ -242,6 +257,7 @@ public class CalculateGameServer {
                catch (IOException e) {
                 e.printStackTrace();
                }
+            //    removePlayer(this);
             }
         }
 
