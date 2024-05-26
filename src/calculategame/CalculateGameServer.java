@@ -32,7 +32,7 @@ public class CalculateGameServer {
 
     // Reset server when player close connection or endgame.
     private static void resetServer(){
-        players.clear();
+        // players.clear();
         questionQueue.clear();
         questionCount = 0;
         counter = 0;
