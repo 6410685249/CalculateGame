@@ -35,25 +35,28 @@ public class CalculateGameServer {
 
     /* Method synchronized */
     private static synchronized void broadcastQuestion(String question) {
+        System.out.println("start broadcast");
         for (PlayerHandler player : players) {
             player.sendQuestion(question);
         }
+        System.out.println("finish boardcast");
     }
 
-    // private static synchronized void updateScores() {
-    //     String scores = getScores();
-    //     for (PlayerHandler player : players) {
-    //         player.sendScoreUpdate(scores);
-    //     }
-    // }
+    // for score
+    private static synchronized void updateScores() {
+        String scores = getScores();
+        for (PlayerHandler player : players) {
+            player.sendScoreUpdate(scores);
+        }
+    }
 
-    // private static synchronized String getScores() {
-    //     StringBuilder scores = new StringBuilder();
-    //     for (PlayerHandler player : players) {
-    //         scores.append(player.getPlayerName()).append(": ").append(player.getScore()).append("\n");
-    //     }
-    //     return scores.toString();
-    // }
+    private static synchronized String getScores() {
+        StringBuilder scores = new StringBuilder();
+        for (PlayerHandler player : players) {
+            scores.append(player.getPlayerName()).append(": ").append(player.getScore()).append(",");
+        }
+        return scores.toString();
+    }
 
     private static synchronized void checkForWinner(PlayerHandler player) {
         if (player.getScore() >= WINNING_SCORE) {
@@ -205,7 +208,14 @@ public class CalculateGameServer {
         private BufferedReader in;
         private boolean isReady = false;
         private int score = 0;
+        // private boolean isAnswerWrong = false;
+        // private boolean isAnswerCorrect = false;
+        private boolean isAnswer = false;
+        private boolean anyAnswerCorrect = false;
+        // private static final Object lock = new Object(); // for critical section
         // private int answered = 0;
+
+        int currentCount = 0;
 
         private PlayerHandler(Socket socket){
             this.socket = socket;
@@ -222,7 +232,8 @@ public class CalculateGameServer {
                 out.println("Welcome to the Calculate Game " + playerName + "! Click 'ready' when you are ready to start.");
 
                 String input;
-                while ((input = in.readLine()) != null) {
+                // while ((input = in.readLine()) != null) {
+                    while ((input = in.readLine()) != null) {
                     if (input.equalsIgnoreCase("ready")) {
                         isReady = true;
                         // out.println("You are ready. Waiting for other players...");
@@ -232,16 +243,20 @@ public class CalculateGameServer {
                             System.out.println("start laew ja");
                         }
                     }
-                    // else if (input.equalsIgnoreCase("play again")) {
-                    //     resetPlayer();
-                    //     out.println("Waiting for other players...");
-                    //     if (allPlayersReady()) {
-                    //         currentQuestion = questionQueue.take();
-                    //         broadcastQuestion(currentQuestion);
-                    //     }
-                    // }
+                    else if (input.equalsIgnoreCase("play again")) {
+                        resetPlayer();
+                        out.println("Waiting for other players...");
+                        // if (allPlayersReady()) {
+                        //     currentQuestion = questionQueue.take();
+                        //     broadcastQuestion(currentQuestion);
+                        // }
+                    }
                     else if (isReady) {
                         try{
+                            // isAnswerCorrect = false;
+                            // isAnswerWrong = false;
+                            // isAnswer = false;
+
                             int playerAnswer = Integer.parseInt(input);
                             String[] questionParts = currentQuestion.split(" ");
                             System.out.println("Question:" + Arrays.toString(questionParts));
@@ -252,17 +267,29 @@ public class CalculateGameServer {
 
                             if (checkAnswer(num1, num2, operator, playerAnswer)){
                                 score++;
-                                System.out.println("god");
+                                System.out.println(playerName + "god");
+                                // isAnswerCorrect = true;
+                                isAnswer = true;
+                                anyAnswerCorrect = true;
                             }
                             else {
-                                System.out.println("noob");
+                                System.out.println(playerName + "noob");
+                                // isAnswerWrong = true;
+                                isAnswer = true;
                             }
-                            counter++;
-                            checkForWinner(this);
 
-                            if (score < WINNING_SCORE) {
-                                currentQuestion = questionQueue.take();
-                                broadcastQuestion(currentQuestion);
+                            if (allPlayersAnswered() || anyAnswerCorrect) {
+                                counter++;
+                                updateScores();
+                                checkForWinner(this);
+                    
+                                anyAnswerCorrect = false;
+                                resetPlayerAnswers();
+                    
+                                if (score < WINNING_SCORE) {
+                                    currentQuestion = questionQueue.take();
+                                    broadcastQuestion(currentQuestion);
+                                }
                             }
 
                             // int playerAnswer = Integer.parseInt(input);
@@ -303,6 +330,26 @@ public class CalculateGameServer {
             return answer == correctAnswer;
         }
 
+        private boolean allPlayersAnswered() {
+            for (PlayerHandler player : players) {
+                // if (!player.isAnswerCorrect && !player.isAnswerWrong) {
+                //     return false;
+                // }
+                if (!player.isAnswer) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        
+        private void resetPlayerAnswers() {
+            for (PlayerHandler player : players) {
+                // player.isAnswerCorrect = false;
+                // player.isAnswerWrong = false;
+                player.isAnswer = false;
+            }
+        }
+
         private boolean allPlayersReady() {
             for (PlayerHandler player : players) {
                 if (!player.isReady) {
@@ -313,7 +360,8 @@ public class CalculateGameServer {
         }
 
         private void sendQuestion(String question) {
-            int currentCount = counter + 1;
+            currentCount = counter + 1;
+            // int currentCount = counter + 1;
             out.println("Question " + currentCount + ": " + question);
             System.out.println("counter: " + counter);
         }
@@ -326,9 +374,9 @@ public class CalculateGameServer {
         //     this.score++;
         // }
 
-        // private void sendScoreUpdate(String scores) {
-        //     out.println("Score Update: " + scores);
-        // }
+        private void sendScoreUpdate(String scores) {
+            out.println("Score Update:" + scores);
+        }
 
         private int getScore(){
             return score;
@@ -336,6 +384,9 @@ public class CalculateGameServer {
 
         private void endGame(String winner) {
             out.println("Game Over! The winner is '" + winner + "'");
+
+            counter = 0;
+            currentCount = 0;
             // out.println("Thank you for playing!");
         }
 
