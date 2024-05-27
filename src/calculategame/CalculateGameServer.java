@@ -13,7 +13,7 @@ public class CalculateGameServer {
     private static List<PlayerHandler> players = new ArrayList<>();
     private static BlockingQueue<String> questionQueue = new LinkedBlockingQueue<>();
     private static volatile String currentQuestion;
-    private static final int TOTAL_QUESTION = 100;
+    private static final int TOTAL_QUESTION = 1000;
     private static final int WINNING_SCORE = 10;
     private static int questionCount = 0;
     private static int counter = 0;
@@ -44,7 +44,6 @@ public class CalculateGameServer {
         System.out.println(players.toString());
         for (PlayerHandler player : players) {
             player.sendQuestion(question);
-            System.out.println(player.playerName + "kuy");
         }
         System.out.println("finish boardcast");
     }
@@ -179,7 +178,7 @@ public class CalculateGameServer {
                         if (allPlayersReady()){
                             currentQuestion = questionQueue.take();
                             broadcastQuestion(currentQuestion);
-                            System.out.println("start laew ja");
+                            System.out.println("Game started!");
                         }
                     }
                     else if (isReady) {
@@ -194,12 +193,12 @@ public class CalculateGameServer {
 
                             if (checkAnswer(num1, num2, operator, playerAnswer)){
                                 score++;
-                                System.out.println(playerName + "god");
+                                System.out.println(playerName + " correct!");
                                 isAnswer = true;
                                 anyAnswerCorrect = true;
                             }
                             else {
-                                System.out.println(playerName + "noob");
+                                System.out.println(playerName + " wrong!");
                                 isAnswer = true;
                             }
 

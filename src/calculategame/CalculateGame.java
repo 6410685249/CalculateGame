@@ -115,10 +115,9 @@ package calculategame;
                          readyButton.setEnabled(true); // Enable submit button for new question
                      }
                      else if (response.startsWith("Question")) {
-                         System.out.println("eiei");
                          questionLabel.setText(response);
                          submitButton.setEnabled(true); // Enable submit button for new question
-                         System.out.println("eiei2");
+                         System.out.println("Check submit button that is enabled.");
                      }
                      else if (response.startsWith("Score Update:")) {
                          System.out.println(response);
@@ -136,20 +135,10 @@ package calculategame;
                          readyButton.setEnabled(false);
                          answerField.setEnabled(false);
                          submitButton.setEnabled(false);
-                         // break; // Exit the loop since the game is over
- 
-                        //  int playAgain = JOptionPane.showConfirmDialog(frame, "Would you like to play again?", "Play Again", JOptionPane.YES_NO_OPTION);
-                         // String option = JOptionPane.showInputDialog(frame, "\nWould you like to play again? (yes/no)");
-                        //  if (playAgain == JOptionPane.YES_OPTION) {
-                        //      questionLabel.setText("Waiting for question...");
-                        //      out.println("play again");
-                        //      readyButton.setEnabled(true);
-                        //  } else {
-                             // out.println("Thank you for playing!");
-                             JOptionPane.showMessageDialog(frame, "Thank you for playing!", "End Game", JOptionPane.INFORMATION_MESSAGE);
-                             frame.dispose();
-                             break; // Exit the loop and close the client
-                        //  }
+                         
+                         JOptionPane.showMessageDialog(frame, "Thank you for playing!", "End Game", JOptionPane.INFORMATION_MESSAGE);
+                         frame.dispose();
+                         break; // Exit the loop and close the client
                      }
                      else {
                          JOptionPane.showMessageDialog(frame, response);
@@ -191,32 +180,3 @@ package calculategame;
          }
      }
  }
- 
-  /* Old code
- public class CalculateGame {
-     private static final String SERVER_ADDRESS = "localhost";
-     private static final int SERVER_PORT = 12345;
- 
-     public static void main(String[] args) {
-         try (Socket socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
-              PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-              BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-              BufferedReader consoleInput = new BufferedReader(new InputStreamReader(System.in))) {
- 
-             String response;
-             while ((response = in.readLine()) != null) {
-                 System.out.println(response);  // Display server messages
- 
-                 if (response.contains("Round")) {
-                     String playerAnswer = consoleInput.readLine();
-                     out.println(playerAnswer);
-                     out.flush();  // Ensure the message is sent immediately
-                 }
-             }
-         } catch (IOException e) {
-             e.printStackTrace();
-         }
-     }
- }
- */
- 
